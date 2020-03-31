@@ -1,6 +1,6 @@
 # TTI-COIN Sample Binary Classifier
 
-Binary Classifier for [sentence polarity datasetv1.0](http://www.cs.cornell.edu/people/pabo/movie-review-data/rt-polaritydata.tar.gz) of [Movie Review Data](http://www.cs.cornell.edu/people/pabo/movie-review-data/).
+Binary Classifier for [sentence polarity dataset v1.0](http://www.cs.cornell.edu/people/pabo/movie-review-data/rt-polaritydata.tar.gz) of [Movie Review Data](http://www.cs.cornell.edu/people/pabo/movie-review-data/).
 This code was prepared for TTI-COIN's assignment.
 
 ## Requirements
