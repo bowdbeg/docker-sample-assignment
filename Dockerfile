@@ -27,6 +27,9 @@ RUN python -m spacy download en_core_web_sm
 # config git account
 RUN git config --global user.name ${GIT_UNAME} && git config --global user.email ${GIT_EMAIL}
 
+# set my setting of zsh
+RUN git clone https://github.com/bowdbeg/my_setting.git /root/my_setting && cp /root/my_setting/.zshrc /home/${LOCAL_UNAME} && chown ${LOCAL_UNAME}:${LOCAL_UNAME} /home/${LOCAL_UNAME}/.zshrc
+
 # setup ssh
 RUN apt install -y openssh-server
 
