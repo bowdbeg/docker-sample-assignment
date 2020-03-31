@@ -95,16 +95,16 @@ Model Parameters:
 Parameters for [Early Stopping](https://en.wikipedia.org/wiki/Early_stopping):
 
 - --stop_patience
-  - When development losses are not change (stop_patience) epochs, stop training.
+  - When development losses are not change for (stop_patience) epochs, stop training.
 - --stop_threshold
   - Margin of judgement of Early Stopping
-  - If -(stop_threshold) < change of develpment loss < (stop_threshold)
+  - If -(stop_threshold) < change of develpment loss < (stop_threshold), judge that development loss has not changed
 - --stop_startup
   - Training will not stop for (stop_startup) epochs
 - --no_early_stopping
   - Switch to run without Early Stopping. (default: False)
 
-Parameters for [scheduler](https://pytorch.org/docs/stable/optim.html?highlight=pla#torch.optim.lr_scheduler.ReduceLROnPlateau) of learning rate:
+Parameters for [scheduler](https://pytorch.org/docs/stable/optim.html?highlight=pla#torch.optim.lr_scheduler.ReduceLROnPlateau) of learning rate (Read PyTorch Document):
 
 - --schedule_patience
 - --schedule_factor
