@@ -6,21 +6,20 @@ import pickle as pkl
 import os
 from models import BinaryClassifier
 from glob import glob
-from utils import EarlyStopper,
+from utils import EarlyStopper, calc_score
 from tqdm import tqdm
 from collections import OrderedDict
 from statistics import mean
+from argparse import ArgumentParser
+from torch.utils.tensorboard import SummaryWriter
 
 # fix random seed
 random.seed(1)
 
 
 def train(args):
-    spacy_model = args.spacy_model
     hidden_size = args.hidden_size
-    tbpath = args.tbpath
     job_tag = args.job_tag
-    pkl_path = args.data_path
     hidden_layer = args.hidden_layer
     non_linear = args.non_linear
     epochs = args.epoch
@@ -28,6 +27,9 @@ def train(args):
     lr = args.lr
     eval_test = args.eval_test
     model_load_path = args.model_load_path
+    pkl_path = args.pkl_path
+    dropout_in = args.dropout_in
+    dropout_out = args.dropout_out
 
     stop_patience = args.stop_patience
     stop_threshold = args.stop_threshold
@@ -38,7 +40,9 @@ def train(args):
     schedule_cooldown = args.schedule_cooldown
     schedule_threshold = args.schedule_threshold
 
-    nlp = spacy.load(spacy_model)
+    tbpath = os.path.join(args.tbpath, job_tag)
+    eval_batch_size = args.eval_batch_size
+
     device = torch.device(args.device)
 
     # load data
@@ -66,10 +70,13 @@ def train(args):
     label_test = label_test.to(device)
 
     # construct model
-    model = models.BinaryClassifier(vocab_size,
-                                    hidden_size,
-                                    hidden_layers=hidden_layer,
-                                    non_linear=non_linear)
+    model = BinaryClassifier(vocab_size,
+                             hidden_size,
+                             hidden_layer=hidden_layer,
+                             non_linear=non_linear,
+                             dropout_in=dropout_in,
+                             dropout_out=dropout_out)
+    model = model.to(device)
 
     # optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -81,7 +88,8 @@ def train(args):
         factor=schedule_factor,
         patience=schedule_patience,
         cooldown=schedule_cooldown,
-        threshold=schedule_threshold)
+        threshold=schedule_threshold,
+        verbose=True)
 
     # early stopping
     stopper = EarlyStopper(model,
@@ -104,9 +112,10 @@ def train(args):
     tb = os.path.join(tbpath, '{:04}'.format(trial_num))
     if not os.path.exists(tb):
         os.makedirs(tb)
-    writer = torch.utils.tensorboard.SummaryWriter(tb)
+    writer = SummaryWriter(tb)
 
-    model_save_path = os.path.join(args.model_save_path, job_tag, trial_num)
+    model_save_path = os.path.join(args.model_save_path, job_tag,
+                                   '{:04}'.format(trial_num))
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
 
@@ -117,6 +126,8 @@ def train(args):
 
     iteration = 0
     best_f1_devel = 0.
+    best_epoch = 0
+    best_weight = model.state_dict()
     for epoch in range(epochs):
         train_itr = torch.utils.data.DataLoader(trainset,
                                                 batch_size=batch_size,
@@ -141,14 +152,16 @@ def train(args):
                 iteration += 1
 
         loss_train = mean(losses)
-        writer.add_argument('train/loss', loss_train, epoch)
+        writer.add_scalar('train/loss', loss_train, epoch)
 
         # evaluation
         with torch.no_grad():
             model.eval()
 
             print('Evaluate Development data...')
-            devel_itr = torch.utils.data.DataLoader(develset)
+            devel_itr = torch.utils.data.DataLoader(develset,
+                                                    shuffle=False,
+                                                    batch_size=eval_batch_size)
             preds = []
             losses = []
             for itr in devel_itr:
@@ -156,7 +169,7 @@ def train(args):
                 pred = model(bow)
                 preds.append(model.predict_from_output(pred))
                 loss = loss_func(pred, label)
-                losses.append(loss)
+                losses.append(loss.item())
             print('finished')
             preds = torch.cat(preds, dim=0)
             loss_devel = mean(losses)
@@ -165,10 +178,12 @@ def train(args):
             writer.add_scalar('devel/precision', precision_devel, epoch)
             writer.add_scalar('devel/recall', recall_devel, epoch)
             writer.add_scalar('devel/f1', f1_devel, epoch)
+            writer.add_scalar('devel/loss', loss_devel, epoch)
 
             if eval_test:
                 print('Evaluate Test data...')
-                test_itr = torch.utils.data.DataLoader(testset)
+                test_itr = torch.utils.data.DataLoader(
+                    testset, shuffle=False, batch_size=eval_batch_size)
                 preds = []
                 losses = []
                 for itr in test_itr:
@@ -176,7 +191,7 @@ def train(args):
                     pred = model(bow)
                     preds.append(model.predict_from_output(pred))
                     loss = loss_func(pred, label)
-                    losses.append(loss)
+                    losses.append(loss.item())
                 print('finished')
                 preds = torch.cat(preds, dim=0)
                 loss_test = mean(losses)
@@ -191,20 +206,22 @@ def train(args):
 
         # when get best score
         if best_f1_devel <= f1_devel:
-            best_devel_f1 = devel_f1
-            best_weight = net.state_dict()
+            best_devel_f1 = f1_devel
+            best_weight = model.state_dict()
             best_epoch = epoch
 
         if epoch % 5 == 4:
-            print('Saving best model (epoch {})...'.format(best_epoch))
+            print(
+                'Saving temporal best model (epoch {})...'.format(best_epoch))
             torch.save(
                 best_weight,
-                os.path.join(model_save_path, '{:04}.pth'.format(best_epoch)))
+                os.path.join(model_save_path,
+                             'temp_{:04}.pth'.format(best_epoch)))
             print('finished')
             if best_epoch != epoch:
                 print('Saving checkpoint model (epoch {})...'.format(epoch))
                 torch.save(
-                    net.state_dict(),
+                    model.state_dict(),
                     os.path.join(model_save_path,
                                  'checkpoint_{:04}.pth'.format(epoch)))
                 print('finished')
@@ -219,3 +236,37 @@ def train(args):
         stopper.best_param,
         os.path.join(model_save_path,
                      'best_{:04}.pth'.format(stopper.best_epoch)))
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument('--hidden_size', type=int, default=512)
+    parser.add_argument('--tbpath', type=str, default='runs')
+    parser.add_argument('--job_tag', type=str, default='sample')
+    parser.add_argument('--pkl_path', type=str, default='pkl')
+    parser.add_argument('--hidden_layer', type=int, default=1)
+    parser.add_argument('--dropout_in', type=float, default=0.0)
+    parser.add_argument('--dropout_out', type=float, default=0.0)
+    parser.add_argument('--non_linear',
+                        type=str,
+                        choices=['relu', 'tanh'],
+                        default='relu')
+    parser.add_argument('--epoch', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--lr', type=float, default=1e-2)
+    parser.add_argument('--eval_test', action='store_true', default=False)
+    parser.add_argument('--model_load_path', type=str, default='')
+    parser.add_argument('--stop_patience', type=int, default=10)
+    parser.add_argument('--stop_threshold', type=float, default=1e-5)
+    parser.add_argument('--stop_startup', type=int, default=0)
+    parser.add_argument('--schedule_patience', type=int, default=5)
+    parser.add_argument('--schedule_factor', type=float, default=0.5)
+    parser.add_argument('--schedule_cooldown', type=int, default=0)
+    parser.add_argument('--schedule_threshold', type=int, default=1e-4)
+    parser.add_argument('--device', type=str, default='cpu')
+    parser.add_argument('--model_save_path', type=str, default='model')
+    parser.add_argument('--eval_batch_size', type=int, default=2048)
+
+    args = parser.parse_args()
+
+    train(args)

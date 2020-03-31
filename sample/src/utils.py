@@ -1,3 +1,6 @@
+import torch
+
+
 class EarlyStopper():
     def __init__(self,
                  model,
@@ -21,6 +24,9 @@ class EarlyStopper():
         self.best_epoch = 0
 
     def step(self, val):
+        if len(self.values) == 0:
+            self.values.append(val)
+            return False
         val_past = self.values[-1]
         sub = val - val_past
         self.values.append(val)

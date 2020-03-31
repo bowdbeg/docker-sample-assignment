@@ -13,6 +13,7 @@ def preprocess(args):
     pos_file = args.pos_file
     neg_file = args.neg_file
     pkl_path = args.pkl_path
+    spacy_model = args.spacy_model
 
     nlp = spacy.load(spacy_model)
 
@@ -45,13 +46,15 @@ def preprocess(args):
 
     # reshape data
     text_train = [t for _, t in train_data]
-    label_train = [lab for lab, _ in train_data]
+    label_train = torch.tensor([lab for lab, _ in train_data],
+                               dtype=torch.float)
 
     text_devel = [t for _, t in devel_data]
-    label_devel = [lab for lab, _ in devel_data]
+    label_devel = torch.tensor([lab for lab, _ in devel_data],
+                               dtype=torch.float)
 
     text_test = [t for _, t in test_data]
-    label_test = [lab for lab, _ in test_data]
+    label_test = torch.tensor([lab for lab, _ in test_data], dtype=torch.float)
 
     # tokenize text
     tokenized_train = [nlp.tokenizer(t) for t in text_train]
@@ -61,7 +64,7 @@ def preprocess(args):
     # vocab
     vocab = set()
     for t in tokenized_train:
-        v = set(map(lambda x: x.lower_, s))
+        v = set(map(lambda x: x.lower_, t))
         vocab = vocab | v
     voc = sorted(vocab)
     vocab = {}
@@ -77,9 +80,15 @@ def preprocess(args):
                 vec[vocab[lower]] = 1
         return vec
 
-    bow_train = torch.cat([get_bow_vector(t, vocab).unsqueeze(dim=0) for t in tokenized_train], dim=0)
-    bow_devel = torch.cat([get_bow_vector(t, vocab).unsqueeze(dim=0) for t in tokenized_devel], dim=0)
-    bow_test = torch.cat([get_bow_vector(t, vocab).unsqueeze(dim=0) for t in tokenized_test], dim=0)
+    bow_train = torch.cat(
+        [get_bow_vector(t, vocab).unsqueeze(dim=0) for t in tokenized_train],
+        dim=0)
+    bow_devel = torch.cat(
+        [get_bow_vector(t, vocab).unsqueeze(dim=0) for t in tokenized_devel],
+        dim=0)
+    bow_test = torch.cat(
+        [get_bow_vector(t, vocab).unsqueeze(dim=0) for t in tokenized_test],
+        dim=0)
 
     # save data
     with open(os.path.join(pkl_path, 'train.pkl'), 'wb') as f:
