@@ -30,6 +30,7 @@ def train(args):
     pkl_path = args.pkl_path
     dropout_in = args.dropout_in
     dropout_out = args.dropout_out
+    no_early_stopping = args.no_early_stoppoing
 
     stop_patience = args.stop_patience
     stop_threshold = args.stop_threshold
@@ -227,7 +228,7 @@ def train(args):
                 print('finished')
 
         # early stopping
-        if stopper.step(loss_devel):
+        if stopper.step(loss_devel) and not no_early_stopping:
             break
 
     # save best model
@@ -266,6 +267,9 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, default='cpu')
     parser.add_argument('--model_save_path', type=str, default='model')
     parser.add_argument('--eval_batch_size', type=int, default=2048)
+    parser.add_argument('--no_early_stopping',
+                        action='store_true',
+                        default=False)
 
     args = parser.parse_args()
 
