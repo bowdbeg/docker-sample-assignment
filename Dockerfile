@@ -10,28 +10,26 @@ ENV GIT_EMAIL bear.kohei@gmail.com
 RUN apt update && apt install -y vim zsh git ssh sudo language-pack-en
 RUN sudo update-locale LANG=en_US.UTF-8
 
-# add user
-RUN useradd ${LOCAL_UNAME} --uid ${LOCAL_UID} --create-home && usermod -aG sudo ${LOCAL_UNAME}
-RUN ln -s /workspace /home/${LOCAL_UNAME}
-RUN echo "${LOCAL_UNAME}:${PASSWORD}" | chpasswd
+# Create a user by specifying the UID
+# command
 
-# symbolic link
-RUN ln -s /workspace /home/${LOCAL_UNAME}/workspace/
+# Grant sudo authority to the user
+# command
 
-# pip install packages
-RUN pip install numpy matplotlib yapf pylint optuna tqdm transformers scikit-learn tensorboard sklearn spacy
+# Create a symboloc ling /workspace to user's home
+# command
 
-# download spacy model
-RUN python -m spacy download en_core_web_sm
+# Change user password
+# command
 
-# config git account
-RUN git config --global user.name ${GIT_UNAME} && git config --global user.email ${GIT_EMAIL}
+# Install python packages
+# command
 
-# set my setting of zsh
-RUN git clone https://github.com/bowdbeg/my_setting.git /root/my_setting && cp /root/my_setting/.zshrc /home/${LOCAL_UNAME} && chown ${LOCAL_UNAME}:${LOCAL_UNAME} /home/${LOCAL_UNAME}/.zshrc
+# Download spacy model
+# command
 
-# setup ssh
-RUN apt install -y openssh-server
+# Config GitHub account (user name and e-mail)
+# command
 
 USER ${LOCAL_UNAME}
 WORKDIR /home/${LOCAL_UNAME}
