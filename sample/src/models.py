@@ -8,7 +8,9 @@ class BinaryClassifier(nn.Module):
                  input_size,
                  hidden_size,
                  hidden_layers=1,
-                 non_linear='relu'):
+                 non_linear='relu',
+                 threshold=0.5):
+        self.threshold = threshold
         self.input_layer = nn.Linear(input_size, hidden_size)
         self.hidden_layer = nn.ModuleList(
             [nn.Linear(hidden_size, hidden_size)] * hidden_layers)
@@ -24,3 +26,10 @@ class BinaryClassifier(nn.Module):
             x = self.non_linear(hidden_layer(x))
         x = torch.sigmoid(self.output_layer(x))
         return x
+
+    def predict(self, x):
+        x = self.forward(x)
+        return self.predict_from_output(x)
+
+    def predict_from_output(self, output):
+        return (output > threshold).to(torch.float)
