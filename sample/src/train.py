@@ -242,9 +242,9 @@ def train(args):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('--hidden_size', type=int, default=512)
-    parser.add_argument('--tbpath', type=str, default='runs')
+    parser.add_argument('--tbpath', type=str, default='runs/')
     parser.add_argument('--job_tag', type=str, default='sample')
-    parser.add_argument('--pkl_path', type=str, default='pkl')
+    parser.add_argument('--pkl_path', type=str, default='pkl/')
     parser.add_argument('--hidden_layer', type=int, default=1)
     parser.add_argument('--dropout_in', type=float, default=0.0)
     parser.add_argument('--dropout_out', type=float, default=0.0)
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     parser.add_argument('--schedule_cooldown', type=int, default=0)
     parser.add_argument('--schedule_threshold', type=int, default=1e-4)
     parser.add_argument('--device', type=str, default='cpu')
-    parser.add_argument('--model_save_path', type=str, default='model')
+    parser.add_argument('--model_save_path', type=str, default='model/')
     parser.add_argument('--eval_batch_size', type=int, default=2048)
     parser.add_argument('--no_early_stopping',
                         action='store_true',
