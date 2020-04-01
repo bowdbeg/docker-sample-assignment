@@ -77,7 +77,7 @@ def preprocess(args):
         for t in text:
             lower = t.lower_
             if lower in vocab.keys():
-                vec[vocab[lower]] = 1
+                vec[vocab[lower]] += 1
         return vec
 
     bow_train = torch.cat(
