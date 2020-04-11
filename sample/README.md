@@ -19,7 +19,7 @@ Run preprocess and [src/train.py](src/train.py).
 
 ```sh
 sh preprocess.sh
-python src/train.py --hidden_size 512 --hidden_layer 5 --epoch 100 --batch_size 32--lr 1e-2 --eval_test --device cuda:0
+python src/train.py --hidden_size 512 --hidden_layer 5 --epoch 100 --batch_size 32 --lr 1e-2 --eval_test --device cuda:0
 ```
 
 ## Preprocess
