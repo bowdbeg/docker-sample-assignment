@@ -13,10 +13,6 @@ from statistics import mean
 from argparse import ArgumentParser
 from torch.utils.tensorboard import SummaryWriter
 
-# fix random seed
-random.seed(1)
-
-
 def train(args):
     hidden_size = args.hidden_size
     job_tag = args.job_tag
@@ -30,7 +26,7 @@ def train(args):
     pkl_path = args.pkl_path
     dropout_in = args.dropout_in
     dropout_out = args.dropout_out
-    no_early_stopping = args.no_early_stoppoing
+    no_early_stopping = args.no_early_stopping
 
     stop_patience = args.stop_patience
     stop_threshold = args.stop_threshold
