@@ -19,7 +19,7 @@ RUN sudo update-locale LANG=en_US.UTF-8
 # Hint: usermod or groupmod
 # command
 
-# Create a symboloc ling /workspace to user's home
+# Create a symboloc link "/workspace" to user's home
 # Hint: remind asignment
 # command
 
