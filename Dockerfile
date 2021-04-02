@@ -20,7 +20,7 @@ RUN sudo update-locale LANG=en_US.UTF-8
 # command
 
 # Create a symboloc link "/workspace" to user's home
-# Hint: remind asignment
+# Hint: review asignment
 # command
 
 # Change user password
