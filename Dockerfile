@@ -12,7 +12,6 @@ RUN sudo update-locale LANG=en_US.UTF-8
 
 # add user
 RUN useradd ${LOCAL_UNAME} --uid ${LOCAL_UID} --create-home && usermod -aG sudo ${LOCAL_UNAME}
-RUN ln -s /workspace /home/${LOCAL_UNAME}
 RUN echo "${LOCAL_UNAME}:${PASSWORD}" | chpasswd
 
 # symbolic link
