@@ -32,7 +32,7 @@ RUN sudo update-locale LANG=en_US.UTF-8
 # command
 
 # Download spacy model
-# Hint: pip
+# Hint: python -m spacy download ....
 # command
 
 # Config GitHub account (user name and e-mail)
