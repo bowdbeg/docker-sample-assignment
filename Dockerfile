@@ -35,10 +35,5 @@ RUN sudo update-locale LANG=en_US.UTF-8
 # Hint: python -m spacy download ....
 # command
 
-# Config GitHub account (user name and e-mail)
-# Note: I recommend to use shell variables defined above.
-# Hint: git config
-# command
-
 USER ${LOCAL_UNAME}
 WORKDIR /home/${LOCAL_UNAME}
